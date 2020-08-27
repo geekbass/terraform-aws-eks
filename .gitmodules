@@ -1,0 +1,3 @@
+[submodule "stage"]
+	path = stage
+	url = git@github.com:geekbass/kubing-the-netes.git
