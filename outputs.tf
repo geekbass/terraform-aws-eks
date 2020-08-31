@@ -14,7 +14,7 @@ data:
         - system:nodes
 CONFIGMAPAWSAUTH
 
-// Kubeconfig output based on command using aws eks update-kubeconfig
+  // Kubeconfig output based on command using aws eks update-kubeconfig
 
   kubeconfig = <<KUBECONFIG
 apiVersion: v1
@@ -47,8 +47,8 @@ users:
       ${var.aws_profile != "" ? local.aws_profile : ""}
 KUBECONFIG
 
-// If AWS_PROFILE is supplied then add the environment variable
-aws_profile = <<AWS_PROFILE
+  // If AWS_PROFILE is supplied then add the environment variable
+  aws_profile = <<AWS_PROFILE
 env:
       - name: AWS_PROFILE
         value: ${var.aws_profile}

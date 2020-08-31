@@ -9,7 +9,7 @@ Example:
 
 ```hcl
 module "eks" {
-    source = "geekbass/terraform-aws-eks"
+    source = "geekbass/eks/aws"
     version = "~> 0.0.1"
     cluster_name   = "my-eks-001
     kubernetes_version = "1.17"
