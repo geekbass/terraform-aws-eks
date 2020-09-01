@@ -56,6 +56,7 @@ module "eks" {
 | max\_number\_workers | Maximum Number of Worker Nodes. | `number` | `1` | no |
 | min\_number\_workers | Minimum Number of Worker Nodes. | `number` | `1` | no |
 | node\_group\_name | Node Group Name | `string` | `"eks"` | no |
+| tags | A map of tags to add to all resources. | `map(string)` | `{}` | no |
 
 ## Outputs
 

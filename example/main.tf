@@ -16,6 +16,11 @@ module "eks" {
   availability_zones     = ["us-east-1a", "us-east-1b", "us-east-1c"]
   aws_profile            = ""
 
+  tags = {
+    owner      = "wbassler"
+    expiration = "4h"
+  }
+
   providers = {
     aws = aws
   }

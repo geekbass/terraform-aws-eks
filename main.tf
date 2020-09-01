@@ -50,6 +50,13 @@ resource "aws_eks_cluster" "eks" {
   name     = "${local.cluster_name}-eks-cluster"
   role_arn = aws_iam_role.eks-cluster.arn
   version  = var.kubernetes_version
+  tags = merge(
+    var.tags,
+    {
+      "Name"                  = "${local.cluster_name}",
+      "kubernetes.io/cluster" = "${local.cluster_name}",
+    },
+  )
 
   vpc_config {
     security_group_ids = [aws_security_group.eks-cluster.id]
@@ -79,6 +86,14 @@ resource "aws_eks_node_group" "eks" {
     min_size     = var.min_number_workers
   }
 
+  tags = merge(
+    var.tags,
+    {
+      "Name"                  = "${local.cluster_name}",
+      "kubernetes.io/cluster" = "${local.cluster_name}",
+    },
+  )
+
   depends_on = [
     aws_iam_role_policy_attachment.eks-node-AmazonEKSWorkerNodePolicy,
     aws_iam_role_policy_attachment.eks-node-AmazonEKS_CNI_Policy,
@@ -91,7 +106,13 @@ EKS
 */
 resource "aws_iam_role" "eks-cluster" {
   name = "${local.cluster_name}-eks-cluster"
-
+  tags = merge(
+    var.tags,
+    {
+      "Name"                  = "${local.cluster_name}",
+      "kubernetes.io/cluster" = "${local.cluster_name}",
+    },
+  )
   assume_role_policy = <<POLICY
 {
   "Version": "2012-10-17",
@@ -123,7 +144,13 @@ Worker
 */
 resource "aws_iam_role" "eks-node" {
   name = "${local.cluster_name}-eks-node"
-
+  tags = merge(
+    var.tags,
+    {
+      "Name"                  = "${local.cluster_name}",
+      "kubernetes.io/cluster" = "${local.cluster_name}",
+    },
+  )
   assume_role_policy = <<POLICY
 {
   "Version": "2012-10-17",
@@ -175,9 +202,13 @@ resource "aws_security_group" "eks-cluster" {
   }
 
 
-  tags = {
-    Name = "terraform-eks-"
-  }
+  tags = merge(
+    var.tags,
+    {
+      "Name"                  = "${local.cluster_name}",
+      "kubernetes.io/cluster" = "${local.cluster_name}",
+    },
+  )
 }
 
 resource "aws_security_group_rule" "eks-cluster-api" {
@@ -204,9 +235,12 @@ resource "aws_vpc" "eks" {
   enable_dns_support   = true
   enable_dns_hostnames = true
 
-  tags = map(
-    "Name", "${local.cluster_name}",
-    "kubernetes.io/cluster/${local.cluster_name}", "shared",
+  tags = merge(
+    var.tags,
+    {
+      "Name"                  = "${local.cluster_name}",
+      "kubernetes.io/cluster" = "${local.cluster_name}",
+    },
   )
 }
 
@@ -218,18 +252,25 @@ resource "aws_subnet" "eks" {
   map_public_ip_on_launch = true
   vpc_id                  = aws_vpc.eks.id
 
-  tags = map(
-    "Name", "${local.cluster_name}",
-    "kubernetes.io/cluster/${local.cluster_name}", "shared",
+  tags = merge(
+    var.tags,
+    {
+      "Name"                  = "${local.cluster_name}",
+      "kubernetes.io/cluster" = "${local.cluster_name}",
+    },
   )
 }
 
 resource "aws_internet_gateway" "eks" {
   vpc_id = aws_vpc.eks.id
 
-  tags = {
-    Name = "${local.cluster_name}"
-  }
+  tags = merge(
+    var.tags,
+    {
+      "Name"                  = "${local.cluster_name}",
+      "kubernetes.io/cluster" = "${local.cluster_name}",
+    },
+  )
 }
 
 resource "aws_route" "internet_access" {
