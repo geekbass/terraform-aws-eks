@@ -99,5 +99,5 @@ output "kubeconfig" {
 
 output "aws_kubeconfig" {
   description = "kubeconfig to use with AWS Auth"
-  value       = local.external_kubeconfig
+  value       = local.aws_kubeconfig
 }
