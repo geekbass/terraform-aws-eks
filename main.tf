@@ -37,6 +37,14 @@ provider "random" {
 
 data "aws_region" "current" {}
 
+data "aws_eks_cluster" "eks" {
+  name = aws_eks_cluster.eks.id
+}
+
+data "aws_eks_cluster_auth" "eks" {
+  name = aws_eks_cluster.eks.id
+}
+
 resource "random_id" "id" {
   byte_length = 4
   prefix      = var.cluster_name

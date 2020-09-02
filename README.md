@@ -62,8 +62,9 @@ module "eks" {
 
 | Name | Description |
 |------|-------------|
+| aws\_kubeconfig | kubeconfig to use with AWS Auth |
 | config\_map\_aws\_auth | n/a |
 | eks\_cluster\_arn | The Amazon Resource Name (ARN) of the cluster |
 | eks\_cluster\_id | The name of the cluster |
-| kubeconfig | n/a |
+| kubeconfig | Default kubeconfig for kubectl |
 

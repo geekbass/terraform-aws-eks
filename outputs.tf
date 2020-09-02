@@ -16,7 +16,7 @@ CONFIGMAPAWSAUTH
 
   // Kubeconfig output based on command using aws eks update-kubeconfig
 
-  kubeconfig = <<KUBECONFIG
+  aws_kubeconfig = <<AWS_KUBECONFIG
 apiVersion: v1
 clusters:
 - cluster:
@@ -45,7 +45,7 @@ users:
       - ${join("", aws_eks_cluster.eks.*.id)}
       command: aws
       ${var.aws_profile != "" ? local.aws_profile : ""}
-KUBECONFIG
+AWS_KUBECONFIG
 
   // If AWS_PROFILE is supplied then add the environment variable
   aws_profile = <<AWS_PROFILE
@@ -53,7 +53,30 @@ env:
       - name: AWS_PROFILE
         value: ${var.aws_profile}
 AWS_PROFILE
+
+  kubeconfig = <<KUBECONFIG
+apiVersion: v1
+clusters:
+- cluster:
+    certificate-authority-data: ${data.aws_eks_cluster.eks.certificate_authority[0].data}
+    server: ${data.aws_eks_cluster.eks.endpoint}
+  name: ${local.cluster_name}
+contexts:
+- context:
+    cluster: ${local.cluster_name}
+    user: kubernetes-admin
+  name: kubernetes-admin@${local.cluster_name}
+current-context: kubernetes-admin@${local.cluster_name}
+kind: Config
+preferences: {}
+users:
+- name: kubernetes-admin
+  user:
+    token: ${data.aws_eks_cluster_auth.eks.token}
+KUBECONFIG
 }
+
+
 
 output "eks_cluster_id" {
   description = "The name of the cluster"
@@ -70,5 +93,11 @@ output "config_map_aws_auth" {
 }
 
 output "kubeconfig" {
-  value = local.kubeconfig
+  description = "Default kubeconfig for kubectl"
+  value       = local.kubeconfig
+}
+
+output "aws_kubeconfig" {
+  description = "kubeconfig to use with AWS Auth"
+  value       = local.external_kubeconfig
 }
