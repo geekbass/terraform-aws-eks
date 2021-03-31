@@ -27,13 +27,9 @@
 * - [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html)
 */
 
-provider "aws" {
-  version = ">= 2.58"
-}
+provider "aws" {}
 
-provider "random" {
-  version = ">= 2.0"
-}
+provider "random" {}
 
 data "aws_region" "current" {}
 
@@ -55,14 +51,14 @@ locals {
 }
 
 resource "aws_eks_cluster" "eks" {
-  name     = "${local.cluster_name}-eks-cluster"
+  name     = local.cluster_name-eks-cluster
   role_arn = aws_iam_role.eks-cluster.arn
   version  = var.kubernetes_version
   tags = merge(
     var.tags,
     {
-      "Name"                  = "${local.cluster_name}",
-      "kubernetes.io/cluster" = "${local.cluster_name}",
+      "Name"                  = local.cluster_name,
+      "kubernetes.io/cluster" = local.cluster_name,
     },
   )
 
@@ -97,8 +93,8 @@ resource "aws_eks_node_group" "eks" {
   tags = merge(
     var.tags,
     {
-      "Name"                  = "${local.cluster_name}",
-      "kubernetes.io/cluster" = "${local.cluster_name}",
+      "Name"                  = local.cluster_name,
+      "kubernetes.io/cluster" = local.cluster_name,
     },
   )
 
@@ -113,12 +109,12 @@ resource "aws_eks_node_group" "eks" {
 EKS 
 */
 resource "aws_iam_role" "eks-cluster" {
-  name = "${local.cluster_name}-eks-cluster"
+  name = local.cluster_name-eks-cluster
   tags = merge(
     var.tags,
     {
-      "Name"                  = "${local.cluster_name}",
-      "kubernetes.io/cluster" = "${local.cluster_name}",
+      "Name"                  = local.cluster_name,
+      "kubernetes.io/cluster" = local.cluster_name,
     },
   )
   assume_role_policy = <<POLICY
@@ -151,12 +147,12 @@ resource "aws_iam_role_policy_attachment" "eks-cluster-AmazonEKSServicePolicy" {
 Worker
 */
 resource "aws_iam_role" "eks-node" {
-  name = "${local.cluster_name}-eks-node"
+  name = local.cluster_name-eks-node
   tags = merge(
     var.tags,
     {
-      "Name"                  = "${local.cluster_name}",
-      "kubernetes.io/cluster" = "${local.cluster_name}",
+      "Name"                  = local.cluster_name,
+      "kubernetes.io/cluster" = local.cluster_name,
     },
   )
   assume_role_policy = <<POLICY
@@ -191,7 +187,7 @@ resource "aws_iam_role_policy_attachment" "eks-node-AmazonEC2ContainerRegistryRe
 }
 
 resource "aws_security_group" "eks-cluster" {
-  name        = "${local.cluster_name}-eks-cluster"
+  name        = local.cluster_name-eks-cluster
   description = "Cluster communication with worker nodes"
   vpc_id      = aws_vpc.eks.id
 
@@ -213,8 +209,8 @@ resource "aws_security_group" "eks-cluster" {
   tags = merge(
     var.tags,
     {
-      "Name"                  = "${local.cluster_name}",
-      "kubernetes.io/cluster" = "${local.cluster_name}",
+      "Name"                  = local.cluster_name,
+      "kubernetes.io/cluster" = local.cluster_name,
     },
   )
 }
@@ -246,8 +242,8 @@ resource "aws_vpc" "eks" {
   tags = merge(
     var.tags,
     {
-      "Name"                  = "${local.cluster_name}",
-      "kubernetes.io/cluster" = "${local.cluster_name}",
+      "Name"                  = local.cluster_name,
+      "kubernetes.io/cluster" = local.cluster_name,
     },
   )
 }
@@ -263,8 +259,8 @@ resource "aws_subnet" "eks" {
   tags = merge(
     var.tags,
     {
-      "Name"                  = "${local.cluster_name}",
-      "kubernetes.io/cluster" = "${local.cluster_name}",
+      "Name"                  = local.cluster_name,
+      "kubernetes.io/cluster" = local.cluster_name,
     },
   )
 }
@@ -275,8 +271,8 @@ resource "aws_internet_gateway" "eks" {
   tags = merge(
     var.tags,
     {
-      "Name"                  = "${local.cluster_name}",
-      "kubernetes.io/cluster" = "${local.cluster_name}",
+      "Name"                  = local.cluster_name,
+      "kubernetes.io/cluster" = local.cluster_name,
     },
   )
 }
