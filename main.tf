@@ -13,23 +13,49 @@
 *     source = "geekbass/eks/aws"
 *     version = "~> 0.0.1"
 *     cluster_name   = "my-eks-001
-*     kubernetes_version = "1.17"
+*     kubernetes_version = "1.19"
 * 
 *     # Workers
-*     desired_number_workers = 2
-*     min_number_workers     = 2
-*     max_number_workers     = 2
-*     instance_types         = "m5.2xlarge"
+*     node_groups = {
+*       label-studio = {
+*           name = "label-studio"
+*           desired_number_workers = 2
+*            max_number_workers     = 2
+*            min_number_workers     = 2
+*
+*            instance_types = ["t2.medium"]
+*            ami_type  = "AL2_x86_64"
+*            disk_size = 50
+*            
+*            k8s_labels = {
+*                environment = "test"
+*                app  = "label-studio"
+*                owner   = "datascience"
+*            }
+*        },
+*        ops = {
+*            name = "ops"
+*            desired_number_workers = 2
+*            max_number_workers     = 2
+*            min_number_workers     = 2
+*
+*            instance_types = ["t2.medium"]
+*            ami_type  = "AL2_x86_64"
+*            disk_size = 50
+*
+*            k8s_labels = {
+*                environment = "test"
+*                app  = "ops"
+*                owner   = "datascience"
+*            }
+*        }
+*    }
 *     }
 * ```
 * ### Prerequisites
 * - [Terraform](https://www.terraform.io/downloads.html) 12 or later
 * - [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html)
 */
-
-provider "aws" {
-  region = var.region
-}
 
 provider "random" {}
 
@@ -53,7 +79,7 @@ locals {
 }
 
 resource "aws_eks_cluster" "eks" {
-  name     = local.cluster_name-eks-cluster
+  name     = "${local.cluster_name}-eks-cluster"
   role_arn = aws_iam_role.eks-cluster.arn
   version  = var.kubernetes_version
   tags = merge(
@@ -65,32 +91,42 @@ resource "aws_eks_cluster" "eks" {
   )
 
   vpc_config {
-    security_group_ids = [aws_security_group.eks-cluster.id]
-    subnet_ids         = aws_subnet.eks[*].id
+    subnet_ids          = aws_subnet.eks[*].id
+    public_access_cidrs = var.admin_ips
   }
 
   depends_on = [
     aws_iam_role_policy_attachment.eks-cluster-AmazonEKSClusterPolicy,
     aws_iam_role_policy_attachment.eks-cluster-AmazonEKSServicePolicy,
+    aws_iam_role_policy_attachment.eks-cluster-AmazonEKSVPCResourceController
   ]
 }
 
 resource "aws_eks_node_group" "eks" {
+  for_each = {
+    for k, v in var.node_groups :
+    k => v
+  }
+
   cluster_name    = aws_eks_cluster.eks.name
-  node_group_name = var.node_group_name
+  node_group_name = each.value.name
   node_role_arn   = aws_iam_role.eks-node.arn
   subnet_ids      = aws_subnet.eks[*].id
 
-  ami_type             = var.ami_type
-  disk_size            = var.disk_size
+  ami_type             = each.value.ami_type
+  disk_size            = each.value.disk_size
   force_update_version = var.force_update_version
-  instance_types       = [var.instance_types]
+  instance_types       = each.value.instance_types
 
   scaling_config {
-    desired_size = var.desired_number_workers
-    max_size     = var.max_number_workers
-    min_size     = var.min_number_workers
+    desired_size = each.value.desired_number_workers
+    max_size     = each.value.max_number_workers
+    min_size     = each.value.min_number_workers
   }
+
+  labels = merge(
+    lookup(var.node_groups[each.key], "k8s_labels", {})
+  )
 
   tags = merge(
     var.tags,
@@ -108,10 +144,10 @@ resource "aws_eks_node_group" "eks" {
 }
 
 /*
-EKS 
+EKS Default role for Cluster
 */
 resource "aws_iam_role" "eks-cluster" {
-  name = local.cluster_name-eks-cluster
+  name = "${local.cluster_name}-eks-cluster"
   tags = merge(
     var.tags,
     {
@@ -145,11 +181,16 @@ resource "aws_iam_role_policy_attachment" "eks-cluster-AmazonEKSServicePolicy" {
   role       = aws_iam_role.eks-cluster.name
 }
 
+resource "aws_iam_role_policy_attachment" "eks-cluster-AmazonEKSVPCResourceController" {
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSVPCResourceController"
+  role       = aws_iam_role.eks-cluster.name
+}
+
 /*
-Worker
+Worker Default IAM role
 */
 resource "aws_iam_role" "eks-node" {
-  name = local.cluster_name-eks-node
+  name = "${local.cluster_name}-eks-node"
   tags = merge(
     var.tags,
     {
@@ -188,44 +229,6 @@ resource "aws_iam_role_policy_attachment" "eks-node-AmazonEC2ContainerRegistryRe
   role       = aws_iam_role.eks-node.name
 }
 
-resource "aws_security_group" "eks-cluster" {
-  name        = local.cluster_name-eks-cluster
-  description = "Cluster communication with worker nodes"
-  vpc_id      = aws_vpc.eks.id
-
-  ingress {
-    from_port = 0
-    to_port   = 0
-    protocol  = "-1"
-    self      = true
-  }
-
-  egress {
-    from_port = 0
-    to_port   = 0
-    protocol  = "-1"
-    self      = true
-  }
-
-
-  tags = merge(
-    var.tags,
-    {
-      "Name"                  = local.cluster_name,
-      "kubernetes.io/cluster" = local.cluster_name,
-    },
-  )
-}
-
-resource "aws_security_group_rule" "eks-cluster-api" {
-  cidr_blocks       = ["0.0.0.0/0"]
-  description       = "Allow communicate with the cluster API Server"
-  from_port         = 443
-  protocol          = "tcp"
-  security_group_id = aws_security_group.eks-cluster.id
-  to_port           = 443
-  type              = "ingress"
-}
 
 // if availability zones is not set request the available in this region
 data "aws_availability_zones" "available" {
