@@ -12,7 +12,7 @@
 * module "eks" {
 *     source = "geekbass/eks/aws"
 *     version = "~> 0.0.1"
-*     cluster_name   = "my-eks-001
+*     cluster_name   = "my-eks-001"
 *     kubernetes_version = "1.19"
 * 
 *     # Workers
@@ -91,14 +91,16 @@ resource "aws_eks_cluster" "eks" {
   )
 
   vpc_config {
-    subnet_ids          = aws_subnet.eks[*].id
-    public_access_cidrs = var.admin_ips
+    subnet_ids              = aws_subnet.eks[*].id
+    public_access_cidrs     = var.admin_ips
+    endpoint_private_access = true
   }
 
   depends_on = [
     aws_iam_role_policy_attachment.eks-cluster-AmazonEKSClusterPolicy,
     aws_iam_role_policy_attachment.eks-cluster-AmazonEKSServicePolicy,
-    aws_iam_role_policy_attachment.eks-cluster-AmazonEKSVPCResourceController
+    aws_iam_role_policy_attachment.eks-cluster-AmazonEKSVPCResourceController,
+    aws_vpc.eks
   ]
 }
 
@@ -140,6 +142,9 @@ resource "aws_eks_node_group" "eks" {
     aws_iam_role_policy_attachment.eks-node-AmazonEKSWorkerNodePolicy,
     aws_iam_role_policy_attachment.eks-node-AmazonEKS_CNI_Policy,
     aws_iam_role_policy_attachment.eks-node-AmazonEC2ContainerRegistryReadOnly,
+    aws_route_table_association.eks,
+    aws_subnet.eks,
+    aws_internet_gateway.eks
   ]
 }
 
@@ -268,6 +273,13 @@ resource "aws_subnet" "eks" {
       "kubernetes.io/cluster" = local.cluster_name,
     },
   )
+}
+
+resource "aws_route_table_association" "eks" {
+  count = length(local.availability_zones)
+
+  subnet_id      = element(aws_subnet.eks.*.id, count.index)
+  route_table_id = aws_vpc.eks.main_route_table_id
 }
 
 resource "aws_internet_gateway" "eks" {
