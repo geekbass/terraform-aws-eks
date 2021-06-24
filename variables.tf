@@ -81,24 +81,32 @@ variable "admin_ips" {
   default     = ["0.0.0.0/32"]
 }
 
+# variable "taint" {
+#   description = "Taint to add to the node group"
+#   type = map(string)
+#   default = {}
+# }
+
 variable "node_groups" {
   description = "Map of maps of eks node groups to create."
   type        = any
   default = {
     example = {
-      name                   = "example"
+      name                   = "default"
       desired_number_workers = 2
       max_number_workers     = 2
       min_number_workers     = 2
 
       instance_types = ["t2.medium"]
+      capacity_type  = "ON_DEMAND"
       ami_type       = "AL2_x86_64"
       disk_size      = 50
-
+      taints         = []
       k8s_labels = {
-        name        = "example"
-        environment = "example"
+        name        = "default"
+        environment = "default"
       }
+      tags = {}
     }
   }
 }

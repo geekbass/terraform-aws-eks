@@ -57,7 +57,7 @@
 * - [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html)
 */
 
-provider "random" {}
+#provider "random" {}
 
 data "aws_region" "current" {}
 
@@ -119,11 +119,22 @@ resource "aws_eks_node_group" "eks" {
   disk_size            = each.value.disk_size
   force_update_version = var.force_update_version
   instance_types       = each.value.instance_types
+  capacity_type        = each.value.capacity_type
 
   scaling_config {
     desired_size = each.value.desired_number_workers
     max_size     = each.value.max_number_workers
     min_size     = each.value.min_number_workers
+  }
+
+  dynamic "taint" {
+    for_each = lookup(var.node_groups[each.key], "taints", {})
+
+    content {
+      key    = taint.value["key"]
+      value  = taint.value["value"]
+      effect = taint.value["effect"]
+    }
   }
 
   labels = merge(
@@ -132,6 +143,7 @@ resource "aws_eks_node_group" "eks" {
 
   tags = merge(
     var.tags,
+    lookup(var.node_groups[each.key], "tags", {}),
     {
       "Name"                  = local.cluster_name,
       "kubernetes.io/cluster" = local.cluster_name,
