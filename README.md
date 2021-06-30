@@ -124,4 +124,5 @@ No modules.
 | <a name="output_config_map_aws_auth"></a> [config\_map\_aws\_auth](#output\_config\_map\_aws\_auth) | n/a |
 | <a name="output_eks_cluster_arn"></a> [eks\_cluster\_arn](#output\_eks\_cluster\_arn) | The Amazon Resource Name (ARN) of the cluster |
 | <a name="output_eks_cluster_id"></a> [eks\_cluster\_id](#output\_eks\_cluster\_id) | The name of the cluster |
+| <a name="output_eks_node_groups"></a> [eks\_node\_groups](#output\_eks\_node\_groups) | n/a |
 | <a name="output_kubeconfig"></a> [kubeconfig](#output\_kubeconfig) | Default kubeconfig for kubectl |
