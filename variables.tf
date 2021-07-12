@@ -81,11 +81,6 @@ variable "admin_ips" {
   default     = ["0.0.0.0/32"]
 }
 
-# variable "taint" {
-#   description = "Taint to add to the node group"
-#   type = map(string)
-#   default = {}
-# }
 
 variable "node_groups" {
   description = "Map of maps of eks node groups to create."
@@ -96,6 +91,7 @@ variable "node_groups" {
       desired_number_workers = 2
       max_number_workers     = 2
       min_number_workers     = 2
+      subnet_ids = []
 
       instance_types = ["t2.medium"]
       capacity_type  = "ON_DEMAND"

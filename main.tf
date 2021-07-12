@@ -113,7 +113,8 @@ resource "aws_eks_node_group" "eks" {
   cluster_name    = aws_eks_cluster.eks.name
   node_group_name = each.value.name
   node_role_arn   = aws_iam_role.eks-node.arn
-  subnet_ids      = aws_subnet.eks[*].id
+  # All users to specify certain AZs for their nodeGroup if not failback using all
+  subnet_ids      = lookup(each.value, "subnets", aws_subnet.eks[*].id)
 
   ami_type             = each.value.ami_type
   disk_size            = each.value.disk_size
